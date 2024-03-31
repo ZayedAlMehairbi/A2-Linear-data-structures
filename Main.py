@@ -55,7 +55,7 @@ class Hospital:
                 self.consultationQueue.queue.remove(patient)
                 return True
         return False
-   #Zayed Update 
+        
     def scheduleAppointment(self, patientId, doctor, datetime):
         self.appointments[patientId] = (doctor, datetime)
 
@@ -76,7 +76,7 @@ class Hospital:
             if prescription[0] == patientId:
                 return prescription
         return None
-    #-----------------
+
 class LoginUI:
     def __init__(self, master):
         self.master = master
