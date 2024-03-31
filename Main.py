@@ -49,6 +49,13 @@ class Hospital:
         if patientId in self.patientRecords:
             self.patientRecords[patientId].medicalCondition = newCondition
 
+    def removePatient(self, patientID):
+        for patient in self.consultationQueue.queue:
+            if patient.patientId == patientID:
+                self.consultationQueue.queue.remove(patient)
+                return True
+        return False
+
     def scheduleAppointment(self, patientId, doctor, datetime):
         self.appointments[patientId] = (doctor, datetime)
 
@@ -205,6 +212,32 @@ class HospitalUI:
             self.conditionEntry.delete(0, tk.END)
         else:
             messagebox.showerror("Error", "Please fill in all fields.")
+
+    def updatePatientRecord(self):
+        patient_id = self.patientIdEntry.get()
+        new_condition = self.conditionEntry.get()
+        if patient_id and new_condition:
+            if self.hospital.updatePatientRecord(patient_id, new_condition):
+                messagebox.showinfo("Success","Patient record updated successfully.")
+                self.updateNoteSummary()
+            else:
+                messagebox.showerror("Error","Patient not found.")
+        else:
+            messagebox.showerror("Error","Please fill in all fields.")
+
+    def removePatient(self):
+        patient_id = self.patientIdEntry.get()
+        if patient_id:
+            if self.hospital.removePatient(patient_id):
+                messagebox.showinfo("Success","Patient was removed from"
+                                              "queue successfully.")
+                self.updateQueue()
+                self.updateNoteSummary()
+            else:
+                messagebox.showerror("Error","Patient not found.")
+        else:
+            messagebox.showerror("Error","Please enter the patient ID:")
+
 
     def prescribeMedication(self):
         patient_index = self.queueListbox.curselection()
