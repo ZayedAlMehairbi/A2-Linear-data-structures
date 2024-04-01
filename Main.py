@@ -55,7 +55,7 @@ class Hospital:
                 self.consultationQueue.queue.remove(patient)
                 return True
         return False
-        
+
     def scheduleAppointment(self, patientId, doctor, datetime):
         self.appointments[patientId] = (doctor, datetime)
 
@@ -67,15 +67,6 @@ class Hospital:
             self.notes[patientId].append(note)
         else:
             self.notes[patientId] = [note]
-
-    def consultNextPatient(self):
-        return self.consultationQueue.dequeue()
-
-    def getPrescriptionForPatient(self, patientId):
-        for prescription in reversed(self.prescriptionStack.stack):
-            if prescription[0] == patientId:
-                return prescription
-        return None
 
 class LoginUI:
     def __init__(self, master):
@@ -128,10 +119,6 @@ class HospitalUI:
         self.patient_frame = tk.LabelFrame(self.main_frame, text="Patient Information", bg=self.bg_color)
         self.patient_frame.pack(padx=20, pady=10, fill=tk.BOTH)
 
-        self.queue_frame = tk.LabelFrame(self.main_frame, text="Consultation Queue", bg=self.bg_color)
-        self.queue_frame.pack(padx=20, pady=10, fill=tk.BOTH)
-        
-    
         self.patientIdLabel = tk.Label(self.patient_frame, text="Patient ID:", bg=self.bg_color, fg=self.text_color)
         self.patientIdLabel.grid(row=0, column=0, padx=5, pady=5)
         self.patientIdEntry = tk.Entry(self.patient_frame)
@@ -142,9 +129,6 @@ class HospitalUI:
         self.patientNameEntry = tk.Entry(self.patient_frame)
         self.patientNameEntry.grid(row=1, column=1, padx=5, pady=5)
 
-        self.consultButton = tk.Button(self.queue_frame, text="Consult Next Patient", command=self.consultNextPatient, bg=self.button_color, fg=self.text_color)
-        self.consultButton.pack(padx=5, pady=5, side=tk.BOTTOM)
-
         self.conditionLabel = tk.Label(self.patient_frame, text="Medical Condition:", bg=self.bg_color, fg=self.text_color)
         self.conditionLabel.grid(row=2, column=0, padx=5, pady=5)
         self.conditionEntry = tk.Entry(self.patient_frame)
@@ -152,6 +136,7 @@ class HospitalUI:
 
         self.addButton = tk.Button(self.patient_frame, text="Add Patient", command=self.addPatient, bg=self.button_color, fg=self.text_color)
         self.addButton.grid(row=3, columnspan=2, padx=5, pady=5)
+
 
         self.queue_frame = tk.LabelFrame(self.main_frame, text="Consultation Queue", bg=self.bg_color)
         self.queue_frame.pack(padx=20, pady=10, fill=tk.BOTH)
@@ -162,6 +147,12 @@ class HospitalUI:
         self.queueScrollbar = tk.Scrollbar(self.queue_frame, orient=tk.VERTICAL, command=self.queueListbox.yview)
         self.queueScrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.queueListbox.config(yscrollcommand=self.queueScrollbar.set)
+
+        self.updateButton = tk.Button(self.patient_frame, text="Update Patient", command=self.updatePatientRecord, bg=self.button_color, fg=self.text_color)
+        self.updateButton.grid(row=4, columnspan=2, padx=5, pady=5)
+
+        self.removeButton = tk.Button(self.patient_frame, text="Remove Patient", command=self.removePatient, bg=self.button_color, fg=self.text_color)
+        self.removeButton.grid(row=5, columnspan=2, padx=5, pady=5)
 
         self.prescription_frame = tk.LabelFrame(self.main_frame, text="Prescription", bg=self.bg_color)
         self.prescription_frame.pack(padx=20, pady=10, fill=tk.BOTH)
@@ -240,15 +231,6 @@ class HospitalUI:
                 messagebox.showerror("Error","Patient not found.")
         else:
             messagebox.showerror("Error","Please fill in all fields.")
-    
-    def consultNextPatient(self):
-        next_patient = self.hospital.consultNextPatient()
-        if next_patient:
-            messagebox.showinfo("Consultation", f"Next patient for consultation: {next_patient.name}")
-            self.updateQueue()
-            self.updateNoteSummary()
-        else:
-            messagebox.showerror("Queue Empty", "No more patients in the queue.")
 
     def removePatient(self):
         patient_id = self.patientIdEntry.get()
@@ -343,14 +325,7 @@ class HospitalUI:
                 summary = f"Patient ID: {patient.patientId}\n" \
                           f"Patient Name: {patient.name}\n" \
                           f"Medical Condition: {patient.medicalCondition}\n\n"
-                
-                prescription = self.hospital.getPrescriptionForPatient(patientId)
-                if prescription:
-                    summary += f"Prescription: {prescription[1]} for {prescription[2]}g on {prescription[3]}\n\n"
-                
-                appointment = self.hospital.appointments.get(patientId)
-                if appointment:
-                    summary += f"Appointment with Dr. {appointment[0]} on {appointment[1]}\n\n"
+
                 if patientId in self.hospital.notes:
                     notes = "\n".join(self.hospital.notes[patientId])
                     summary += f"Notes:\n{notes}\n\n"
@@ -379,7 +354,6 @@ class HospitalUI:
         root = tk.Tk()
         app = LoginUI(root)
         root.mainloop()
-
 
 root = tk.Tk()
 app = LoginUI(root)
