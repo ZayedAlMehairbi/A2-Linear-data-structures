@@ -48,6 +48,9 @@ class Hospital:
     def updatePatientRecord(self, patientId, newCondition):
         if patientId in self.patientRecords:
             self.patientRecords[patientId].medicalCondition = newCondition
+            return True
+        else:
+            return False
 
     def removePatient(self, patientID):
         for patient in self.consultationQueue.queue:
@@ -67,6 +70,15 @@ class Hospital:
             self.notes[patientId].append(note)
         else:
             self.notes[patientId] = [note]
+
+    def consultNextPatient(self):
+        return self.consultationQueue.dequeue()
+
+    def getPrescriptionForPatient(self, patientId):
+        for item in self.prescriptionStack.stack:
+            if item[0] == patientId:
+                return item
+        return None
 
 class LoginUI:
     def __init__(self, master):
@@ -246,17 +258,25 @@ class HospitalUI:
     def updatePatientRecord(self):
         patient_id = self.patientIdEntry.get()
         new_condition = self.conditionEntry.get()
-        if patient_id and new_condition:
-            if self.hospital.updatePatientRecord(patient_id, new_condition):
-                messagebox.showinfo("Success", "Patient record updated successfully.")
-                self.updateNoteSummary()
+        if patient_id:
+            patient_id = str(patient_id)
+            if patient_id in self.hospital.patientRecords:
+                if new_condition:
+                    if self.hospital.updatePatientRecord(patient_id, new_condition):
+                        messagebox.showinfo("Success", "Patient record updated successfully.")
+                        self.updateQueue()
+                        self.updateNoteSummary()
+                    else:
+                        messagebox.showerror("Error", "Failed to update patient record.")
+                else:
+                    messagebox.showerror("Error", "Please fill in the new medical condition.")
             else:
                 messagebox.showerror("Error", "Patient not found.")
         else:
-            messagebox.showerror("Error", "Please fill in all fields.")
+            messagebox.showerror("Error", "Please enter the patient ID.")
 
     def consultNextPatient(self):
-        next_patient = self.hospital.consultNextPatient()
+        next_patient = self.hospital.consultationQueue.dequeue()
         if next_patient:
             messagebox.showinfo("Consultation", f"Next patient for consultation: {next_patient.name}")
             self.updateQueue()
@@ -367,19 +387,6 @@ class HospitalUI:
                 if patientId in self.hospital.notes:
                     notes = "\n".join(self.hospital.notes[patientId])
                     summary += f"Notes:\n{notes}\n\n"
-
-                prescription = None
-                for item in self.hospital.prescriptionStack.stack:
-                    if item[0] == patientId:
-                        prescription = item
-                        break
-
-                if prescription:
-                    summary += f"Prescription:\nPrescribed Medication: {prescription[1]}\nAmount: {prescription[2]}g\nDate: {prescription[3]}\n\n"
-
-                if patientId in self.hospital.appointments:
-                    doctor, datetime_str = self.hospital.appointments[patientId]
-                    summary += f"Doctor Appointment:\nDoctor: {doctor}\nDate and Time: {datetime_str}\n"
 
                 self.summaryText.config(text=summary)
             else:
